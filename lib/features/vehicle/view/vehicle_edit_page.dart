@@ -460,15 +460,26 @@ class _VehicleEditPageState extends State<VehicleEditPage>
     return ['Honda City', 'Maruti Swift', 'Hyundai Creta', 'Toyota Innova', 'Tata Nexon', 'Mahindra XUV'];
   }
 
-  Widget _buildFloatingActionButtons(bool isLoading) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Delete Button
-          SizedBox(
+  Widget _buildActionButtons(bool isLoading) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Delete Button
+        ScaleTransition(
+          scale: _buttonScaleAnimation,
+          child: Container(
             width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
             child: ElevatedButton.icon(
               onPressed: isLoading || _isDeleting ? null : _onDelete,
               icon: _isDeleting
@@ -480,9 +491,9 @@ class _VehicleEditPageState extends State<VehicleEditPage>
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.delete_outline_rounded, color: Colors.white),
-              label: const Text(
-                'Delete',
+                  : const Icon(Icons.delete_outline_rounded, size: 22),
+              label: Text(
+                _isDeleting ? 'Deleting...' : 'Delete Vehicle',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -493,19 +504,39 @@ class _VehicleEditPageState extends State<VehicleEditPage>
                 backgroundColor: Theme.of(context).colorScheme.error,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: _isDeleting ? 0 : 4,
+                shadowColor: Theme.of(context).colorScheme.error.withOpacity(0.3),
+                disabledBackgroundColor: Theme.of(context).colorScheme.error.withOpacity(0.6),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          // Save Button
-          SizedBox(
+        ),
+        const SizedBox(height: 16),
+        // Save Button
+        ScaleTransition(
+          scale: _buttonScaleAnimation,
+          child: Container(
             width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
             child: ElevatedButton.icon(
-              onPressed: isLoading ? null : _onSubmit,
+              onPressed: isLoading ? null : () {
+                _buttonController.forward().then((_) {
+                  _buttonController.reverse();
+                });
+                _onSubmit();
+              },
               icon: isLoading
                   ? const SizedBox(
                       width: 20,
@@ -515,21 +546,29 @@ class _VehicleEditPageState extends State<VehicleEditPage>
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.save_rounded),
-              label: Text(isLoading ? 'Saving...' : 'Save'),
+                  : const Icon(Icons.save_rounded, size: 22),
+              label: Text(
+                isLoading ? 'Saving Changes...' : 'Save Changes',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                elevation: isLoading ? 0 : 8,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: isLoading ? 0 : 4,
+                shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.6),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -597,7 +636,8 @@ class _VehicleEditPageState extends State<VehicleEditPage>
           style: IconButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.8),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          )),
+          ),
+        ),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark 
@@ -721,14 +761,26 @@ class _VehicleEditPageState extends State<VehicleEditPage>
                       absorbing: isLoading,
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             children: [
                               _buildFormContent(),
                               
-                              // Bottom spacing
-                              const SizedBox(height: 120),
+                              // Action Buttons
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                child: BlocBuilder<VehicleCrudBloc, VehicleCrudState>(
+                                  builder: (context, state) {
+                                    final bool isLoading = state is VehicleCrudLoading;
+                                    return _buildActionButtons(isLoading);
+                                  },
+                                ),
+                              ),
+                              
+                              // Extra bottom padding for safe area
+                              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
                             ],
                           ),
                         ),
@@ -741,14 +793,6 @@ class _VehicleEditPageState extends State<VehicleEditPage>
           );
         },
       ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: BlocBuilder<VehicleCrudBloc, VehicleCrudState>(
-        builder: (context, state) {
-          final bool isLoading = state is VehicleCrudLoading;
-          return _buildFloatingActionButtons(isLoading);
-        },
-      ),
-      
     );
   }
 }

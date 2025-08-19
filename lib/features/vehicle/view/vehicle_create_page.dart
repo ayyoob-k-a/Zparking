@@ -393,80 +393,79 @@ class _VehicleCreatePageState extends State<VehicleCreatePage>
     return ['Honda City', 'Maruti Swift', 'Hyundai Creta', 'Toyota Innova', 'Tata Nexon', 'Mahindra XUV'];
   }
 
-  Widget _buildFloatingSubmitButton(bool isLoading) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: ScaleTransition(
-        scale: _buttonScaleAnimation,
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: isLoading ? null : () {
-              _buttonController.forward().then((_) {
-                _buttonController.reverse();
-              });
-              _onSubmit();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
-              elevation: isLoading ? 0 : 8,
-              shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+  Widget _buildSubmitButton(bool isLoading) {
+    return ScaleTransition(
+      scale: _buttonScaleAnimation,
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-            child: isLoading
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'Creating Vehicle...',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_rounded, size: 22),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Create Vehicle',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: isLoading ? null : () {
+            _buttonController.forward().then((_) {
+              _buttonController.reverse();
+            });
+            _onSubmit();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: isLoading ? 0 : 4,
+            shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.6),
           ),
+          child: isLoading
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Creating Vehicle...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_rounded, size: 22),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Create Vehicle',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -588,6 +587,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage>
                     ),
                   ],
                 ),
+                
               ),
             );
             
@@ -640,14 +640,26 @@ class _VehicleCreatePageState extends State<VehicleCreatePage>
                       absorbing: isLoading,
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             children: [
                               _buildFormContent(),
                               
-                              // Bottom spacing
-                              const SizedBox(height: 120),
+                              // Submit Button
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                child: BlocBuilder<VehicleCrudBloc, VehicleCrudState>(
+                                  builder: (context, state) {
+                                    final bool isLoading = state is VehicleCrudLoading;
+                                    return _buildSubmitButton(isLoading);
+                                  },
+                                ),
+                              ),
+                              
+                              // Extra bottom padding for safe area
+                              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
                             ],
                           ),
                         ),
@@ -660,13 +672,6 @@ class _VehicleCreatePageState extends State<VehicleCreatePage>
           );
         },
       ),
-      floatingActionButton: BlocBuilder<VehicleCrudBloc, VehicleCrudState>(
-        builder: (context, state) {
-          final bool isLoading = state is VehicleCrudLoading;
-          return _buildFloatingSubmitButton(isLoading);
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
