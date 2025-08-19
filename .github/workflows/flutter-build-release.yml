@@ -157,7 +157,7 @@ jobs:
           asset_name: Zparking-${{ steps.version_info.outputs.app_version }}.apk
           asset_content_type: application/vnd.android.package-archive
 
-# Uncomment this if you're deploying to App Center
+# Optional: Deploy to App Center
 # deploy_app_center:
 #   name: Deploy to App Center
 #   needs: [build_android]
@@ -170,15 +170,11 @@ jobs:
 #         name: Zparking-apk
 #         path: apk
 #
-#     - name: List APK files
-#       run: ls -la apk/
-#
-#     - name: Extract first APK file
+#     - name: Extract APK path
 #       id: find_apk
 #       run: |
 #         APK_FILE=$(find apk -name "*.apk" | head -n 1)
 #         echo "apk_file=$APK_FILE" >> $GITHUB_OUTPUT
-#         echo "Found APK: $APK_FILE"
 #
 #     - name: Upload to App Center
 #       uses: wzieba/App-Center-action@v1
@@ -190,5 +186,5 @@ jobs:
 #         notifyTesters: true
 #         releaseNotes: |
 #           Zparking App new build
-#
+
 #           ${{ github.event.inputs.release_notes }}
